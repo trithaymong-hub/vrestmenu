@@ -35,8 +35,14 @@ header {
   justify-content: space-between;
   padding: 0 20px;
   z-index: 1000;
-  background: rgba(0,0,0,0.9);
-  backdrop-filter: blur(10px);
+  background: rgba(0,0,0,0.92);
+}
+
+/* ❌ REMOVE blur on mobile (VERY IMPORTANT) */
+@media (min-width: 769px) {
+  header {
+    backdrop-filter: blur(10px);
+  }
 }
 
 .logo {
@@ -54,17 +60,12 @@ nav a {
 
 /* ================= SECTIONS ================= */
 .section {
-  min-height: 80vh;            /* ✅ FIXED */
-  padding-left: 3px;
-  padding-right: 3px;
-  padding-top: 0;
-  padding-bottom: 0;
-
+  min-height: 85vh;
+  padding: 0 4px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #000;
-
   overflow: hidden;
 }
 
@@ -79,23 +80,29 @@ nav a {
   max-width: 520px;
 
   opacity: 0;
-  transform: translateY(60px) scale(0.96);
+  transform: translateY(40px);
   transition:
-    opacity 0.8s ease,
-    transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 0.6s ease,
+    transform 0.6s ease;
+
+  will-change: transform, opacity; /* ⚡ GPU hint */
 }
 
 /* ===== SCROLL REVEAL ACTIVE ===== */
 .section.show .image-3d {
   opacity: 1;
-  transform: translateY(0) scale(1);
+  transform: translateY(0);
 }
 
 .image-3d img {
   width: 100%;
   height: auto;
-  object-fit: contain;     /* ✅ show all text clearly */
+  object-fit: contain;
   display: block;
+
+  /* ⚡ VERY IMPORTANT FOR SPEED */
+  content-visibility: auto;
+  contain-intrinsic-size: 520px 700px;
 }
 
 /* ================= MOBILE ================= */
@@ -138,26 +145,31 @@ imageOrder.forEach(item => {
 
   section.innerHTML = `
     <div class="image-3d">
-      <img src="image/${item}.png" alt="Menu ${item}" loading="lazy">
+      <img 
+        src="image/${item}.png"
+        alt="Menu ${item}"
+        loading="lazy"
+        decoding="async"
+      >
     </div>
   `;
 
   gallery.appendChild(section);
 });
 
-/* ================= SCROLL REVEAL ================= */
+/* ================= FAST SCROLL REVEAL ================= */
 const observer = new IntersectionObserver(
-  (entries, observer) => {
+  entries => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         entry.target.classList.add("show");
-        observer.unobserve(entry.target); // ✅ reveal once
+        observer.unobserve(entry.target);
       }
     });
   },
   {
-    threshold: 0.35,
-    rootMargin: "0px 0px -80px 0px"
+    threshold: 0.1,              // 🔥 reveal earlier
+    rootMargin: "300px 0px"      // 🔥 preload before visible
   }
 );
 
